@@ -1,0 +1,23 @@
+BOARD_WIDTH, BOARD_HEIGHT = 800, 800
+PANEL_WIDTH = 400
+WIDTH, HEIGHT = BOARD_WIDTH + PANEL_WIDTH, BOARD_HEIGHT
+DIMENSION = 8
+SQ_SIZE = BOARD_WIDTH // DIMENSION
+ASSET_PATH = "assets/pieces"
+SERVER_URL = "http://localhost:8000/move"
+INITIAL_TIME = 600  # 10 minutes, in seconds
+
+
+# this might be better placed in a different file, will leave it for now
+import chess
+
+PIECES = [
+        (chess.PAWN, "P"),
+        (chess.KNIGHT, "N"),
+        (chess.BISHOP, "B"),
+        (chess.ROOK, "R"),
+        (chess.QUEEN, "Q"),
+        (chess.KING, "K"),
+    ]
+COLORS = [(chess.WHITE, "w"), (chess.BLACK, "b")]
+output_dir = "assets/pieces"

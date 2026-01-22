@@ -1,0 +1,8 @@
+fastapi
+python-chess
+pygame
+google-generativeai
+uvicorn[standard]
+cairosvg
+requests
+openai

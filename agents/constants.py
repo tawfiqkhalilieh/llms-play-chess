@@ -1,0 +1,5 @@
+GEMINI_API_KEY="APIKEY"
+GEMINI_MODEL="gemini-2.5-flash"
+
+OPENAI_API_KEY="APIKEY"
+OPENAI_MODEL="gpt-4-vision-preview"
