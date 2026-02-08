@@ -2,7 +2,7 @@ import os
 import json
 import abc
 import google.generativeai as genai
-from constants import OPENAI_API_KEY, GEMINI_MODEL, GEMINI_API_KEY
+from agents.constants import OPENAI_API_KEY, GEMINI_MODEL, GEMINI_API_KEY
 # Placeholder for OpenAI and other LLM libraries
 # from openai import OpenAI 
 

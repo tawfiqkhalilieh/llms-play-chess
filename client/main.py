@@ -4,6 +4,10 @@ import os
 import requests
 import sys
 import time
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 from constants import BOARD_WIDTH, BOARD_HEIGHT, PANEL_WIDTH, WIDTH, HEIGHT, DIMENSION, SQ_SIZE, ASSET_PATH, SERVER_URL, INITIAL_TIME
 from styles import LIGHT_SQ_COLOR, DARK_SQ_COLOR, HIGHLIGHT_COLOR, POPUP_BG_COLOR, POPUP_TEXT_COLOR, PANEL_COLOR, PANEL_TEXT_COLOR, BUTTON_COLOR, BUTTON_TEXT_COLOR, CLOCK_COLOR
 from utils.get_font import get_font
@@ -33,8 +37,17 @@ class ChessGUI:
             if filename.endswith(".png"):
                 piece_name = filename[:-4]
                 path = os.path.join(ASSET_PATH, filename)
+                try:
+                    image = pygame.image.load(path)
+                except pygame.error:
+                    if Image:
+                        pil_img = Image.open(path)
+                        image = pygame.image.fromstring(pil_img.tobytes(), pil_img.size, pil_img.mode)
+                    else:
+                        raise
+
                 pieces[piece_name] = pygame.transform.scale(
-                    pygame.image.load(path), (SQ_SIZE, SQ_SIZE)
+                    image, (SQ_SIZE, SQ_SIZE)
                 )
         return pieces
 

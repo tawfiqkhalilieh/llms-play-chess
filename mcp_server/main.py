@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
-from models.Move import MoveRequest, MoveResponse
+from mcp_server.models.Move import MoveRequest, MoveResponse
 from agents.llm_agents import AGENTS_TYPE, GeminiAgent, OpenAIAgent
-from constants import LLM_AGENT_TYPE
+from agents.constants import LLM_AGENT_TYPE
 
 app: FastAPI = FastAPI()
 
