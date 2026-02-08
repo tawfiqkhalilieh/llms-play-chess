@@ -18,8 +18,6 @@ class GeminiAgent(BaseAgent):
         self.configured = False
 
     def _initialize_model(self):
-        if "GEMINI_API_KEY" not in os.environ:
-            raise ValueError("GEMINI_API_KEY environment variable not set for GeminiAgent.")
         self.genai.configure(api_key=GEMINI_API_KEY) # type: ignore
         self.model = self.genai.GenerativeModel(GEMINI_MODEL) # type: ignore
         self.configured = True

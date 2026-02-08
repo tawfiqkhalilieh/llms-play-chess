@@ -175,7 +175,6 @@ class ChessGUI:
                     if move in self.board.legal_moves:
                         self.move_list.append(self.board.san(move))
                         self.board.push(move)
-                        self.player_turn = not self.player_turn
                         self.selected_square = None
                         self.explanation_message = "Thinking..."
                         self.last_move_time = time.time()
@@ -198,16 +197,12 @@ class ChessGUI:
             move = chess.Move.from_uci(data["move"])
             self.move_list.append(self.board.san(move))
             self.board.push(move)
-            if self.game_mode == "pva":
-                self.player_turn = not self.player_turn
             self.show_popup(data["comment"])
             self.explanation_message = data["explanation"]
             self.last_move_time = time.time()
         except requests.exceptions.RequestException as e:
             self.show_popup("Error: Could not connect to server.")
             print(e)
-            if self.game_mode == "pva":
-                self.player_turn = not self.player_turn
 
 
     def show_popup(self, message):

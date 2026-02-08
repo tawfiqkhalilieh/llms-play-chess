@@ -5,7 +5,7 @@ DIMENSION = 8
 SQ_SIZE = BOARD_WIDTH // DIMENSION
 ASSET_PATH = "assets/pieces"
 SERVER_URL = "http://localhost:8000/move"
-INITIAL_TIME = 5  # 5 seconds, in seconds
+INITIAL_TIME = 10 * 60  # 5 seconds, in seconds
 
 
 # this might be better placed in a different file, will leave it for now

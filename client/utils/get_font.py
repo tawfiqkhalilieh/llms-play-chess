@@ -1,4 +1,5 @@
 import pygame
+import os
 
 class MockFont:
     def __init__(self, size):
@@ -25,8 +26,7 @@ class MockFont:
     def get_linesize(self):
         return self.height
 
-import pygame
-import os
+
 
 try:
     from PIL import Image, ImageDraw, ImageFont
