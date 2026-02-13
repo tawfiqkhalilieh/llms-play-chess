@@ -10,6 +10,8 @@ AGENT: AGENTS_TYPE | None = None
 @app.post("/move", response_model=MoveResponse)
 async def get_move(request: MoveRequest):
     if AGENT is None:
+
+        
         raise HTTPException(status_code=401, detail="LLM Agent not initialized.")
     
     try:

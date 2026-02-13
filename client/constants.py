@@ -1,9 +1,12 @@
+import os
+
 BOARD_WIDTH, BOARD_HEIGHT = 800, 800
 PANEL_WIDTH = 400
 WIDTH, HEIGHT = BOARD_WIDTH + PANEL_WIDTH, BOARD_HEIGHT
 DIMENSION = 8
 SQ_SIZE = BOARD_WIDTH // DIMENSION
-ASSET_PATH = "assets/pieces"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSET_PATH = os.path.join(BASE_DIR, "assets", "pieces")
 SERVER_URL = "http://localhost:8000/move"
 INITIAL_TIME = 10 * 60  # 5 seconds, in seconds
 
@@ -20,4 +23,4 @@ PIECES = [
         (chess.KING, "K"),
     ]
 COLORS = [(chess.WHITE, "w"), (chess.BLACK, "b")]
-output_dir = "assets/pieces"
+output_dir = ASSET_PATH
