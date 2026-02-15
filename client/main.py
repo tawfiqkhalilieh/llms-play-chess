@@ -12,6 +12,8 @@ from constants import BOARD_WIDTH, BOARD_HEIGHT, PANEL_WIDTH, WIDTH, HEIGHT, DIM
 from styles import LIGHT_SQ_COLOR, DARK_SQ_COLOR, HIGHLIGHT_COLOR, POPUP_BG_COLOR, POPUP_TEXT_COLOR, PANEL_COLOR, PANEL_TEXT_COLOR, BUTTON_COLOR, BUTTON_TEXT_COLOR
 from utils.get_font import get_font
 from explain_panel import ExplainPanel
+import native_stockfish
+import random
 
 class ChessGUI:
     def __init__(self):
@@ -30,6 +32,9 @@ class ChessGUI:
         self.is_thinking = False # New flag to block input
         self.explain_panel = ExplainPanel(width=360)
         self.explain_panel.update("N/A", "Welcome to Chess! Select a mode to start.", "No commentary yet.")
+
+        self.client = native_stockfish.StockfishClient("/home/taw/workspace/the-ai-collective/llms-play-chess/client/Stockfish/src/stockfish")
+        self.client.start()
 
     def load_piece_images(self):
         pieces = {}
@@ -164,13 +169,26 @@ class ChessGUI:
 
     def agent_turn(self):
         pgn = str(self.board)
+        # Get top 5 moves for accuracy
+        print(str(self.board.fen))
+        top5 = list(filter(('').__ne__, list(self.client.top_moves(str(self.board.fen()), 10, 5)))) 
+        
+        
+        if len(top5) <= 2:
+            top5.append(random.choice(possible_moves))
+            top5.append(random.choice(possible_moves))
+        print(top5)
+
         possible_moves = [move.uci() for move in self.board.legal_moves]
+
+        if not set(top5) or top5 == ['', '', '']: top5 = possible_moves 
+       
         context = f"{self.game_mode} game. It's your turn."
         request_start = time.time()
 
         try:
             response = requests.post(SERVER_URL, json={
-                "pgn": pgn, "possible_moves": possible_moves, "context": context
+                "pgn": pgn, "possible_moves": top5, "context": context
             })
             response.raise_for_status()
             data = response.json()
