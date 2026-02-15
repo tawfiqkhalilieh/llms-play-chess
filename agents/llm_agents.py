@@ -212,7 +212,7 @@ You must choose one of the possible moves.
         {context}
 
         **Move Count:**
-        {len(self.board.move_stack)}
+        {pgn.count('.')}
 
         What is the best move? Use chess terminology and sound knowledgeable. Return ONLY the JSON object.
         <|im_end|>
