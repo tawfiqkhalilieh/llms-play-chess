@@ -170,14 +170,16 @@ class ChessGUI:
     def agent_turn(self):
         pgn = str(self.board)
         # Get top 5 moves for accuracy
-        print(str(self.board.fen))
+        if getattr(self, "debug", False):
+            print(self.board.fen())
         top5 = list(filter(('').__ne__, list(self.client.top_moves(str(self.board.fen()), 10, 5)))) 
         
         
         if len(top5) <= 2:
             top5.append(random.choice(possible_moves))
             top5.append(random.choice(possible_moves))
-        print(top5)
+        if getattr(self, "debug", False):
+            print(top5)
 
         possible_moves = [move.uci() for move in self.board.legal_moves]
 
