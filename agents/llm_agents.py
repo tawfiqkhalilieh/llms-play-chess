@@ -81,7 +81,7 @@ class OpenAIAgent(BaseAgent):
         self.client = OpenAI(api_key=OPENAI_API_KEY)
         self.model = OPENAI_MODEL
 
-    def _get_completion_with_retry(self, prompt: str, max_retries: int = 5, initial_delay: float = 1.0) -> str:
+    def _get_completion_with_retry(self, prompt: str, max_retries: int = 5, initial_delay: float = 0.5) -> str:
         delay = initial_delay
         for attempt in range(max_retries):
             try:
@@ -211,7 +211,10 @@ You must choose one of the possible moves.
         **Context:**
         {context}
 
-        What is the best move? Return ONLY the JSON object.
+        **Move Count:**
+        {pgn.count('.')}
+
+        What is the best move? Use chess terminology and sound knowledgeable. Return ONLY the JSON object.
         <|im_end|>
         <|im_start|>assistant
         """

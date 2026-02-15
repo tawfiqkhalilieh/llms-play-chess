@@ -8,10 +8,12 @@ try:
     from PIL import Image
 except ImportError:
     Image = None
-from constants import BOARD_WIDTH, BOARD_HEIGHT, PANEL_WIDTH, WIDTH, HEIGHT, DIMENSION, SQ_SIZE, ASSET_PATH, SERVER_URL, INITIAL_TIME
-from styles import LIGHT_SQ_COLOR, DARK_SQ_COLOR, HIGHLIGHT_COLOR, POPUP_BG_COLOR, POPUP_TEXT_COLOR, PANEL_COLOR, PANEL_TEXT_COLOR, BUTTON_COLOR, BUTTON_TEXT_COLOR, CLOCK_COLOR
+from constants import BOARD_WIDTH, BOARD_HEIGHT, PANEL_WIDTH, WIDTH, HEIGHT, DIMENSION, SQ_SIZE, ASSET_PATH, SERVER_URL
+from styles import LIGHT_SQ_COLOR, DARK_SQ_COLOR, HIGHLIGHT_COLOR, POPUP_BG_COLOR, POPUP_TEXT_COLOR, PANEL_COLOR, PANEL_TEXT_COLOR, BUTTON_COLOR, BUTTON_TEXT_COLOR
 from utils.get_font import get_font
 from explain_panel import ExplainPanel
+import native_stockfish
+import random
 
 class ChessGUI:
     def __init__(self):
@@ -27,12 +29,12 @@ class ChessGUI:
         self.popup_timer = 0
         self.explanation_message = "Welcome to Chess! Select a mode to start."
         self.move_list = []
-        self.white_time = INITIAL_TIME
-        self.black_time = INITIAL_TIME
-        self.last_move_time = time.time()
         self.is_thinking = False # New flag to block input
-        self.explain_panel = ExplainPanel(width=300)
-        self.explain_panel.update("-", "Welcome to Chess! Select a mode to start.", "No commentary yet.")
+        self.explain_panel = ExplainPanel(width=360)
+        self.explain_panel.update("N/A", "Welcome to Chess! Select a mode to start.", "No commentary yet.")
+
+        self.client = native_stockfish.StockfishClient("/home/taw/workspace/the-ai-collective/llms-play-chess/client/Stockfish/src/stockfish")
+        self.client.start()
 
     def load_piece_images(self):
         pieces = {}
@@ -107,24 +109,6 @@ class ChessGUI:
         self.screen.blit(black_name_text, (BOARD_WIDTH + 20, 20))
         self.screen.blit(white_name_text, (BOARD_WIDTH + 20, HEIGHT - 80))
     
-    def draw_clocks(self):
-        white_minutes, white_seconds = divmod(self.white_time, 60)
-        black_minutes, black_seconds = divmod(self.black_time, 60)
-        
-        white_time_str = f"{int(white_minutes):02}:{int(white_seconds):02}"
-        black_time_str = f"{int(black_minutes):02}:{int(black_seconds):02}"
-        
-        font = get_font(30)
-        white_time_text = font.render(white_time_str, True, PANEL_TEXT_COLOR)
-        black_time_text = font.render(black_time_str, True, PANEL_TEXT_COLOR)
-        
-        pygame.draw.rect(self.screen, CLOCK_COLOR, (BOARD_WIDTH + 250, HEIGHT - 80, 120, 40), border_radius=5)
-        pygame.draw.rect(self.screen, CLOCK_COLOR, (BOARD_WIDTH + 250, 20, 120, 40), border_radius=5)
-        
-        self.screen.blit(white_time_text, (BOARD_WIDTH + 260, HEIGHT - 75))
-        self.screen.blit(black_time_text, (BOARD_WIDTH + 260, 25))
-
-
     def draw_move_list(self):
         font = get_font(22)
         y_offset = 80
@@ -177,8 +161,7 @@ class ChessGUI:
                         self.board.push(move)
                         self.selected_square = None
                         self.explanation_message = "Thinking..."
-                        self.explain_panel.update("-", "Thinking...", "Agent is preparing a response.")
-                        self.last_move_time = time.time()
+                        self.explain_panel.update("N/A", "Thinking...", "Agent is preparing a response.")
                     elif self.board.piece_at(clicked_square) and self.board.piece_at(clicked_square) and self.board.piece_at(clicked_square).color == self.player_turn: # type: ignore
                         self.selected_square = clicked_square
                     else:
@@ -186,33 +169,49 @@ class ChessGUI:
 
     def agent_turn(self):
         pgn = str(self.board)
+        # Get top 5 moves for accuracy
+        if getattr(self, "debug", False):
+            print(self.board.fen())
+        top5 = list(filter(('').__ne__, list(self.client.top_moves(str(self.board.fen()), 10, 5)))) 
+        
+        
+        if len(top5) <= 2:
+            top5.append(random.choice(possible_moves))
+            top5.append(random.choice(possible_moves))
+        if getattr(self, "debug", False):
+            print(top5)
+
         possible_moves = [move.uci() for move in self.board.legal_moves]
+
+        if not set(top5) or top5 == ['', '', '']: top5 = possible_moves 
+       
         context = f"{self.game_mode} game. It's your turn."
         request_start = time.time()
 
         try:
             response = requests.post(SERVER_URL, json={
-                "pgn": pgn, "possible_moves": possible_moves, "context": context
+                "pgn": pgn, "possible_moves": top5, "context": context
             })
             response.raise_for_status()
             data = response.json()
             move = chess.Move.from_uci(data["move"])
             self.move_list.append(self.board.san(move))
             self.board.push(move)
-            self.show_popup(data["comment"])
-            self.explanation_message = data["explanation"]
+            comment_text = data.get("comment") or data.get("trash_talk") or "N/A"
+            explanation_text = data.get("explanation") or "N/A"
+            move_text = data.get("move") or "N/A"
+            self.show_popup(comment_text)
+            self.explanation_message = explanation_text
             elapsed_ms = int((time.time() - request_start) * 1000)
             thinking_time_ms = data.get("thinking_time_ms", elapsed_ms)
             token_usage = data.get("token_usage")
-            self.explain_panel.update(data["move"], data["explanation"], data["comment"])
+            self.explain_panel.update(move_text, explanation_text, comment_text)
             self.explain_panel.set_legal_moves(possible_moves)
             self.explain_panel.set_metrics(thinking_time_ms=thinking_time_ms, token_usage=token_usage)
-            self.last_move_time = time.time()
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             self.show_popup("Error: Could not connect to server.")
-            self.explain_panel.update("-", "Could not connect to MCP server.", "No AI response available.")
-            self.explain_panel.set_legal_moves(possible_moves)
-            self.explain_panel.set_metrics()
+            self.explanation_message = "Could not connect to MCP server."
+            self.explain_panel.mark_connection_error()
             print(e)
 
 
@@ -261,22 +260,9 @@ class ChessGUI:
 
     def run(self):
         self.select_game_mode()
-        self.last_move_time = time.time()
 
         running = True
         while running and not self.board.is_game_over():
-            
-            # Update clocks
-            current_time = time.time()
-            time_delta = current_time - self.last_move_time
-            if self.board.turn == chess.WHITE:
-                self.white_time -= time_delta
-            else:
-                self.black_time -= time_delta
-            self.last_move_time = current_time
-
-            if self.white_time < 0 or self.black_time < 0:
-                running = False
 
 
             if self.game_mode == "pva" and self.board.turn != self.player_turn:
@@ -291,6 +277,8 @@ class ChessGUI:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.handle_mouse_click(pygame.mouse.get_pos())
+                elif event.type == pygame.MOUSEWHEEL:
+                    self.explain_panel.handle_mouse_wheel(pygame.mouse.get_pos(), event.y)
 
             self.screen.fill(PANEL_COLOR)
             self.draw_board()

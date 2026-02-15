@@ -28,7 +28,7 @@ This project implements a chess application where users can play against AI agen
 
 ## Features
 
-*   **Interactive GUI:** Built with `pygame`, featuring move highlighting, drag-and-drop (or click-click) interface, and a game clock.
+*   **Interactive GUI:** Built with `pygame`, featuring move highlighting and a click-click move interface.
 *   **Game Modes:**
     *   **Player vs. Agent:** Play against the AI.
     *   **Agent vs. Agent:** Watch two AI agents play against each other.
