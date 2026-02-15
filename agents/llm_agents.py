@@ -214,7 +214,7 @@ You must choose one of the possible moves.
         **Move Count:**
         {len(self.board.move_stack)}
 
-        What is the best move, Sound smart, and use chess terminology? Return ONLY the JSON object.
+        What is the best move? Use chess terminology and sound knowledgeable. Return ONLY the JSON object.
         <|im_end|>
         <|im_start|>assistant
         """
